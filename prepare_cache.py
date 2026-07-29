@@ -102,8 +102,16 @@ def main(gold_path: Path, scores_path: Path):
 
     print("[6/7] Cache slim para filtragem dinâmica …")
     slim = df[['ano','mes','ano_mes','bairro_geo','regional_label','macrotema',
-               'assunto_padronizado','orgao_padronizado','categoria_manifestacao',
-               'tipo','situacao','tempo_resposta_dias']].copy()
+            'assunto_padronizado','orgao_padronizado','categoria_manifestacao',
+            'tipo','situacao','tempo_resposta_dias']].copy()
+
+    # Converte colunas de texto repetitivo para category — reduz uso de RAM
+    # em runtime (Streamlit Cloud tem limite de 2.7GB no plano gratuito).
+    cat_cols = ['bairro_geo','regional_label','macrotema','assunto_padronizado',
+                'orgao_padronizado','categoria_manifestacao','tipo','situacao']
+    for c in cat_cols:
+        slim[c] = slim[c].astype('category')
+
     slim.to_parquet(CACHE_SLIM, index=False)
 
     print("[7/7] Scores mensais e valores de filtro …")
