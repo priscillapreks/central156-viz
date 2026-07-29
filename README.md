@@ -46,7 +46,6 @@ streamlit run app.py
 |-----|----------|
 | 📊 Visão Geral | Macrotemas, TMR por regional, categoria, top assuntos |
 | 🗺️ Mapa Territorial | Choropleth + painel lateral por bairro |
-| 📈 Série Temporal | Volume mensal, heatmap ano×mês, tabela anual |
 | 🏷️ Temas & Órgãos | Criticidade por macrotema, top órgãos, tabela de assuntos |
 | 🎯 Priorização | Ranking global, score timeline, quadrante de risco, race chart |
 
