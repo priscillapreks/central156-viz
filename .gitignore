@@ -1,0 +1,4 @@
+﻿__pycache__/
+*.pyc
+data/central156_gold.parquet
+data/geo_scores_monthly.parquet
