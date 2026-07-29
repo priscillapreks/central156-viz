@@ -157,12 +157,22 @@ def compute_ts(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def compute_bairro_map(df: pd.DataFrame) -> pd.DataFrame:
-    """Agrega por bairro para o mapa coroplético."""
-    agg = df.groupby(['bairro_geo', 'regional_label']).agg(
-        total  = ('categoria_manifestacao', 'count'),
-        n_prob = ('categoria_manifestacao', lambda x: (x == 'PROBLEMA').sum()),
-        n_conc = ('situacao', lambda x: (x == 'CONCLUIDO').sum()),
-        tmr    = ('tempo_resposta_dias', 'median'),
+    """Agrega por bairro para o mapa coroplético.
+
+    IMPORTANTE: agrupamos apenas por 'bairro_geo' (não por regional_label
+    também). Alguns bairros têm registros sob mais de um regional (erro de
+    cadastro/endereço) — agrupar pelos dois campos gera linhas duplicadas
+    para o mesmo bairro, e o Plotly (que casa por nome via featureidkey)
+    passa a exibir hover inconsistente/errado para esses casos. Aqui
+    calculamos o regional predominante (moda) apenas para exibição.
+    """
+    agg = df.groupby('bairro_geo').agg(
+        total          = ('categoria_manifestacao', 'count'),
+        n_prob         = ('categoria_manifestacao', lambda x: (x == 'PROBLEMA').sum()),
+        n_conc         = ('situacao', lambda x: (x == 'CONCLUIDO').sum()),
+        tmr            = ('tempo_resposta_dias', 'median'),
+        regional_label = ('regional_label',
+                           lambda x: x.mode().iloc[0] if not x.mode().empty else x.iloc[0]),
     ).reset_index()
     agg['taxa_problema']  = (agg['n_prob'] / agg['total'] * 100).round(1)
     agg['taxa_conclusao'] = (agg['n_conc'] / agg['total'] * 100).round(1)

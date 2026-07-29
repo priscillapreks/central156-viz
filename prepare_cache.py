@@ -46,11 +46,17 @@ def main(gold_path: Path, scores_path: Path):
     ts.to_parquet(CACHE_TS, index=False)
 
     print("[3/7] Agregação por bairro …")
-    bb = df.groupby(['bairro_geo','regional_label']).agg(
+    # Agrupa só por bairro_geo (não também por regional_label): alguns
+    # bairros têm registros sob mais de um regional por inconsistência de
+    # cadastro, e agrupar pelos dois campos duplicava 'locations' no mapa
+    # Plotly, causando hover incorreto. O regional exibido é o predominante.
+    bb = df.groupby('bairro_geo').agg(
         total =('categoria_manifestacao', 'count'),
         n_prob=('categoria_manifestacao', lambda x: (x=='PROBLEMA').sum()),
         n_conc=('situacao', lambda x: (x=='CONCLUIDO').sum()),
         tmr   =('tempo_resposta_dias', 'median'),
+        regional_label=('regional_label',
+                         lambda x: x.mode().iloc[0] if not x.mode().empty else x.iloc[0]),
     ).reset_index()
     bb['taxa_problema']  = (bb['n_prob'] / bb['total'] * 100).round(1)
     bb['taxa_conclusao'] = (bb['n_conc'] / bb['total'] * 100).round(1)
@@ -102,16 +108,8 @@ def main(gold_path: Path, scores_path: Path):
 
     print("[6/7] Cache slim para filtragem dinâmica …")
     slim = df[['ano','mes','ano_mes','bairro_geo','regional_label','macrotema',
-            'assunto_padronizado','orgao_padronizado','categoria_manifestacao',
-            'tipo','situacao','tempo_resposta_dias']].copy()
-
-    # Converte colunas de texto repetitivo para category — reduz uso de RAM
-    # em runtime (Streamlit Cloud tem limite de 2.7GB no plano gratuito).
-    cat_cols = ['bairro_geo','regional_label','macrotema','assunto_padronizado',
-                'orgao_padronizado','categoria_manifestacao','tipo','situacao']
-    for c in cat_cols:
-        slim[c] = slim[c].astype('category')
-
+               'assunto_padronizado','orgao_padronizado','categoria_manifestacao',
+               'tipo','situacao','tempo_resposta_dias']].copy()
     slim.to_parquet(CACHE_SLIM, index=False)
 
     print("[7/7] Scores mensais e valores de filtro …")

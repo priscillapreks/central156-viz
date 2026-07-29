@@ -573,21 +573,48 @@ const TN={top_n};
 let ci=0,play=false,iv=null,spd=800;
 const MN=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
-const W=document.getElementById('chart').parentElement.clientWidth-28;
+// Largura do container pode ser 0 se o layout do iframe ainda não tiver
+// se estabilizado no primeiro carregamento (bug comum de components.html
+// no Streamlit). Usamos um fallback fixo nesse caso e recalculamos no
+// próximo frame para garantir a largura correta.
+function getW(){{
+  const cw=document.getElementById('chart').parentElement.clientWidth;
+  return (cw && cw>50)?cw-28:(window.innerWidth||760)-28;
+}}
+let W=getW();
 const MG={{t:4,r:110,b:28,l:220}};
 const BH=34,IH=TN*BH+MG.t+MG.b;
-const IW=W-MG.l-MG.r;
+let IW=W-MG.l-MG.r;
 
 const svg=d3.select('#chart').append('svg').attr('width',W).attr('height',IH);
 const g=svg.append('g').attr('transform',`translate(${{MG.l}},${{MG.t}})`);
 g.append('g').attr('class','grid');
 const bG=g.append('g'),lG=g.append('g'),rG=g.append('g');
 const xA=g.append('g').attr('transform',`translate(0,${{TN*BH}})`);
-const xS=d3.scaleLinear().domain([0,100]).range([0,IW]);
+let xS=d3.scaleLinear().domain([0,100]).range([0,IW]);
 xA.call(d3.axisBottom(xS).ticks(5).tickSize(-TN*BH));
 xA.select('.domain').attr('stroke','#E2E8F0');
 xA.selectAll('.tick line').attr('stroke','#F1F5F9');
 xA.selectAll('.tick text').attr('fill','#94A3B8').attr('font-size','10px');
+
+// Recalcula a largura real após o layout estabilizar (próximo frame +
+// pequeno delay de segurança) e redesenha os eixos se ela tiver mudado.
+requestAnimationFrame(()=>{{
+  setTimeout(()=>{{
+    const w2=getW();
+    if(Math.abs(w2-W)>10){{
+      W=w2; IW=W-MG.l-MG.r;
+      svg.attr('width',W);
+      xS=d3.scaleLinear().domain([0,100]).range([0,IW]);
+      xA.selectAll('*').remove();
+      xA.call(d3.axisBottom(xS).ticks(5).tickSize(-TN*BH));
+      xA.select('.domain').attr('stroke','#E2E8F0');
+      xA.selectAll('.tick line').attr('stroke','#F1F5F9');
+      xA.selectAll('.tick text').attr('fill','#94A3B8').attr('font-size','10px');
+      upd(ci,false);
+    }}
+  }},60);
+}});
 
 function upd(idx,anim){{
   const rows=D[M[idx]]||[];
