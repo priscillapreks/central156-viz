@@ -123,7 +123,7 @@ def mapa_coropletico(
 
     z_vals = _bdf[metric].copy()
 
-    fig = go.Figure(go.Choroplethmapbox(
+    fig = go.Figure(go.Choroplethmap(
         geojson=geojson,
         featureidkey='properties.nome',
         locations=_bdf['bairro_geo'],
@@ -155,7 +155,7 @@ def mapa_coropletico(
     ))
 
     if selected and selected in _bdf['bairro_geo'].values:
-        fig.add_trace(go.Choroplethmapbox(
+        fig.add_trace(go.Choroplethmap(
             geojson=geojson, featureidkey='properties.nome',
             locations=[selected], z=[1],
             colorscale=[[0, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0)']],
@@ -164,8 +164,8 @@ def mapa_coropletico(
         ))
 
     fig.update_layout(
-        mapbox=dict(style='carto-positron', zoom=10.4,
-                    center=dict(lat=-25.428, lon=-49.271)),
+        map=dict(style='carto-positron', zoom=10.4,
+                 center=dict(lat=-25.428, lon=-49.271)),
         height=480, margin=dict(t=0, b=0, l=0, r=0),
         template=_TPL, paper_bgcolor='white',
     )
