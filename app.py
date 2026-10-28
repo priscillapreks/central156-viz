@@ -223,7 +223,7 @@ with st.sidebar:
 
 
 # ── Filtragem dinâmica ─────────────────────────────────────────────────────────
-@st.cache_data(show_spinner=False)
+#@st.cache_data(show_spinner=False)
 def get_filtered(_df, anos, meses, regionais, bairros, macrotemas,
                  assuntos, orgaos, categorias, tipos, situacoes):
     return filter_slim(
